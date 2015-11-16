@@ -11,8 +11,9 @@ module.exports = function(RED) {
     }
     RED.nodes.registerType("ushahidi-post",UshahidiPost, {
       credentials: {
-        username: {type: "text"},
-        password: {type: "password"}
+        client_secret: {type: "text", required: true},
+        username: {type: "text", required: true},
+        password: {type: "password", required: true},
       }
     });
 }

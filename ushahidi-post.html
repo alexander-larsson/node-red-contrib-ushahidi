@@ -4,10 +4,13 @@
         color: '#ffc334',
         defaults: {
             name: {value:""},
+            api_endpoint: {value:"", required: true},
+            client_id: {value:"ushahidiui"}
         },
         credentials: {
-          username: {type: "text"},
-          password: {type: "password"}
+          client_secret: {type: "text", required: true},
+          username: {type: "text", required: true},
+          password: {type: "password", required: true},
         },
         inputs:1,
         outputs:1,
@@ -32,6 +35,18 @@
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-api"><i class="fa fa-globe"></i> API Endpoint</label>
+        <input type="text" id="node-input-api" placeholder="http(s)://example.com">
+    </div>
+    <div class="form-row">
+        <label for="node-input-client-id"><i class="fa fa-certificate"></i> Client ID</label>
+        <input type="text" id="node-input-client-id" placeholder="ushahidiui">
+    </div>
+    <div class="form-row credentials">
+        <label for="node-input-client-secret"><i class="fa fa-user-secret"></i> Client secret</label>
+        <input type="text" id="node-input-client-secret" placeholder="Client secret">
     </div>
     <div class="form-row credentials">
         <label for="node-input-username"><i class="fa fa-user"></i> Username</label>
