@@ -1,0 +1,49 @@
+<script type="text/javascript">
+    RED.nodes.registerType('ushahidi-post',{
+        category: 'Ushahidi',
+        color: '#ffc334',
+        defaults: {
+            name: {value:""},
+        },
+        credentials: {
+          username: {type: "text"},
+          password: {type: "password"}
+        },
+        inputs:1,
+        outputs:1,
+        icon: "ushahidi_logo.png",
+        paletteLabel: "POST",
+        label: function() {
+            return this.name||"Ushahidi POST";
+        }
+    });
+</script>
+
+<!-- msg.payload = {
+    "client_secret" : "35e7f0bca957836d05ca0492211b0ac707671261",
+    "client_id" : "ushahidiui",
+    "grant_type" : "password",
+    "username" : "admin",
+    "password" : "admin",
+    "scope" : "posts media forms api tags savedsearches sets users stats layers config messages notifications contacts"
+} -->
+
+<script type="text/x-red" data-template-name="ushahidi-post">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row credentials" style="display: none;">
+        <label for="node-input-username"><i class="fa fa-user"></i> Username</label>
+        <input type="text" id="node-input-username" placeholder="Username">
+    </div>
+    <div class="form-row credentials" style="display: none;">
+        <label for="node-input-password"><i class="fa fa-key"></i> Password</label>
+        <input type="password" id="node-input-password" placeholder="Password">
+    </div>
+
+</script>
+
+<script type="text/x-red" data-help-name="ushahidi-post">
+    <p>Creates a post at the url in msg.url with the desciption in msg.payload</p>
+</script>
