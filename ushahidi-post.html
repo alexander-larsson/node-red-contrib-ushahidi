@@ -1,10 +1,11 @@
 <script type="text/javascript">
-    RED.nodes.registerType('ushahidi-post',{
+    RED.nodes.registerType('ushahidi-admin',{
         category: 'Ushahidi',
         color: '#ffc334',
         defaults: {
             name: {value:""},
-            api_endpoint: {value:"", required: true}
+            api_endpoint: {value:"", required:true},
+            method: {value:"get",required:true}
         },
         credentials: {
           client_secret: {type: "text", required: true},
@@ -31,31 +32,31 @@
     "scope" : "posts media forms api tags savedsearches sets users stats layers config messages notifications contacts"
 } -->
 
-<script type="text/x-red" data-template-name="ushahidi-post">
+<script type="text/x-red" data-template-name="ushahidi-admin">
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
         <label for="node-input-method"><i class="fa fa-tasks"></i> Method</label>
-        <select type="text" id="node-input-method" style="width:73%;">
-        <option value="get">GET</option>
-        <option value="post">POST</option>
-        <option value="put">PUT</option>
-        <option value="delete">DELETE</option>
+        <select type="text" id="node-input-method" style="width:72%;">
+          <option value="get">GET</option>
+          <option value="post">POST</option>
+          <option value="put">PUT</option>
+          <option value="delete">DELETE</option>
         </select>
     </div>
     <div class="form-row">
         <label for="node-input-api-endpoint"><i class="fa fa-globe"></i> API Endpoint</label>
-        <input type="text" id="node-input-api-endpoint" placeholder="http(s)://example.com">
+        <input type="text" id="node-input-api_endpoint" placeholder="http(s)://example.com">
     </div>
     <div class="form-row credentials">
         <label for="node-input-client-id"><i class="fa fa-certificate"></i> Client ID</label>
-        <input type="text" id="node-input-client-id" placeholder="ushahidiui">
+        <input type="text" id="node-input-client_id" placeholder="ushahidiui">
     </div>
     <div class="form-row credentials">
         <label for="node-input-client-secret"><i class="fa fa-user-secret"></i> Client secret</label>
-        <input type="text" id="node-input-client-secret" placeholder="Client secret">
+        <input type="text" id="node-input-client_secret" placeholder="Client secret">
     </div>
     <div class="form-row credentials">
         <label for="node-input-username"><i class="fa fa-user"></i> Username</label>
@@ -68,6 +69,6 @@
 
 </script>
 
-<script type="text/x-red" data-help-name="ushahidi-post">
+<script type="text/x-red" data-help-name="ushahidi-admin">
     <p>Creates a post at the url in msg.url with the desciption in msg.payload</p>
 </script>
