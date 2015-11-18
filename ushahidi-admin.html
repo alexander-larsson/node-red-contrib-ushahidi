@@ -4,8 +4,9 @@
         color: '#ffc334',
         defaults: {
             name: {value:""},
-            api_endpoint: {value:"", required:true},
-            method: {value:"get",required:true}
+            api_endpoint: {value:"", required: true},
+            method: {value:"get", required: true},
+            post_status: {value:"published", required: true}
         },
         credentials: {
           client_secret: {type: "text", required: true},
@@ -18,19 +19,10 @@
         icon: "ushahidi_logo.png",
         paletteLabel: "Ushahidi Admin",
         label: function() {
-            return this.name||"Ushahidi Admin";
+            return this.name || "Ushahidi Admin";
         }
     });
 </script>
-
-<!-- msg.payload = {
-    "client_secret" : "35e7f0bca957836d05ca0492211b0ac707671261",
-    "client_id" : "ushahidiui",
-    "grant_type" : "password",
-    "username" : "admin",
-    "password" : "admin",
-    "scope" : "posts media forms api tags savedsearches sets users stats layers config messages notifications contacts"
-} -->
 
 <script type="text/x-red" data-template-name="ushahidi-admin">
     <div class="form-row">
@@ -47,15 +39,22 @@
         </select>
     </div>
     <div class="form-row">
+        <label for="node-input-post_status"><i class="fa fa-print"></i> Method</label>
+        <select type="text" id="node-input-post_status" style="width:72%;">
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+        </select>
+    </div>
+    <div class="form-row">
         <label for="node-input-api-endpoint"><i class="fa fa-globe"></i> API Endpoint</label>
         <input type="text" id="node-input-api_endpoint" placeholder="http(s)://example.com">
     </div>
     <div class="form-row credentials">
-        <label for="node-input-client-id"><i class="fa fa-certificate"></i> Client ID</label>
+        <label for="node-input-client_id"><i class="fa fa-certificate"></i> Client ID</label>
         <input type="text" id="node-input-client_id" placeholder="ushahidiui">
     </div>
     <div class="form-row credentials">
-        <label for="node-input-client-secret"><i class="fa fa-user-secret"></i> Client secret</label>
+        <label for="node-input-client_secret"><i class="fa fa-user-secret"></i> Client secret</label>
         <input type="text" id="node-input-client_secret" placeholder="Client secret">
     </div>
     <div class="form-row credentials">
@@ -66,9 +65,18 @@
         <label for="node-input-password"><i class="fa fa-key"></i> Password</label>
         <input type="password" id="node-input-password" placeholder="Password">
     </div>
-
 </script>
 
 <script type="text/x-red" data-help-name="ushahidi-admin">
-    <p>Creates a post at the url in msg.url with the desciption in msg.payload</p>
+    <p>Creates a ushahidi post with the following options:</p>
+    <ul>
+       <li><code>msg.title</code>, will be the title of the post</li>
+       <li><code>msg.author</code>, will be the author of the post</li>
+       <li><code>msg.email</code>, will be the authors email</li>
+       <li><code>msg.payload</code>, will be the description of the post</li>
+       <li><code>msg.loc</code>, is a JavaScript object that includes the location of the post.
+       The latitude should be set in a property <code>lat</code> and the longitude in <code>lon</code>.
+       E.g: {lat: 13, lon: 37}</li>
+       <li><code>msg.form_id</code>, will be the id of the form on the Ushahidi deployment. Defaults to 1.</li>
+   </ul>
 </script>
