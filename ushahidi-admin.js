@@ -73,6 +73,52 @@ module.exports = function(RED) {
       req.end();
     };
 
+    var refreshAccessToken = function(){
+      node.status({fill:"blue",shape:"ring",text:"Refreshing Access Token"});
+      var payload = JSON.stringify({
+        "client_secret" : client_secret,
+        "client_id" : client_id,
+        "grant_type" : "refresh",
+        "refresh_token" : refresh_token
+      });
+
+      var headers = {
+        "Content-Type" : "application/json",
+        "Cache-Control" : "no-cache"
+      };
+
+      var opts = urllib.parse(api_endpoint);
+      opts.headers = headers;
+      opts.method = "POST";
+      //opts.auth = username+":"+(password||"");
+      opts.path += "/oauth/token";
+      var req = http.request(opts, function(res){
+        var statusCode = res.statusCode;
+        var headers = res.headers;
+        var response_payload = "";
+
+        res.on('data',function(chunk) {
+          response_payload += chunk;
+        });
+
+        res.on('end',function() {
+          response_payload = JSON.parse(response_payload);
+          access_token = response_payload.access_token;
+          //refresh_token = response_payload.refresh_token;
+          // Catch up on saved messages
+          if(statusCode === 401){
+            requestAccessToken();
+          }else{
+            message_buffer.map(postRequest);
+            node.log("Refreshed access token");
+            node.status({});
+          }
+        });
+      });
+      req.write(payload);
+      req.end();
+    };
+
     var postRequest = function(msg) {
       node.status({fill:"blue",shape:"ring",text:"Posting to Ushahidi"});
       var payload = JSON.stringify({
@@ -119,9 +165,10 @@ module.exports = function(RED) {
             node.send(msg);
             break;
           case 401:
+            node.status({fill:"yellow",shape:"ring",text:"Access token expired"});
             message_buffer.push(clone(msg));
             access_token = "";
-            requestAccessToken(); // Replace with token refresh
+            refreshAccessToken();
             break;
           case 400:
             message_buffer.push(clone(msg));
