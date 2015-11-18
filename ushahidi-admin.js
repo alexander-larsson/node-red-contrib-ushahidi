@@ -29,16 +29,26 @@ module.exports = function(RED) {
       api_endpoint = "http://"+api_endpoint;
     }
 
-    var requestAccessToken = function(){
-      node.status({fill:"blue",shape:"ring",text:"Requesting Access Token"});
-      var payload = JSON.stringify({
-        "client_secret" : client_secret,
-        "client_id" : client_id,
-        "grant_type" : "password",
-        "username" : username,
-        "password" : password,
-        "scope" : "posts media forms api tags savedsearches sets users stats layers config messages notifications contacts"
-      });
+    var getAccessToken = function(){
+      node.status({fill:"blue",shape:"ring",text: (refresh_token === "")? "Requesting" : "Refreshing" + " Access Token"});
+      var payload;
+      if (refresh_token === ""){
+        payload = JSON.stringify({
+          "client_secret" : client_secret,
+          "client_id" : client_id,
+          "grant_type" : "password",
+          "username" : username,
+          "password" : password,
+          "scope" : "posts media forms api tags savedsearches sets users stats layers config messages notifications contacts"
+        });
+      }else{
+        payload = JSON.stringify({
+          "client_secret" : client_secret,
+          "client_id" : client_id,
+          "grant_type" : "refresh",
+          "refresh_token" : refresh_token
+        });
+      }
 
       var headers = {
         "Content-Type" : "application/json",
@@ -48,7 +58,9 @@ module.exports = function(RED) {
       var opts = urllib.parse(api_endpoint);
       opts.headers = headers;
       opts.method = "POST";
-      opts.auth = username+":"+(password||"");
+      if (refresh_token !== ""){
+        opts.auth = username+":"+(password||"");
+      }
       opts.path += "/oauth/token";
       var req = http.request(opts, function(res){
         var statusCode = res.statusCode;
@@ -60,57 +72,17 @@ module.exports = function(RED) {
         });
 
         res.on('end',function() {
-          response_payload = JSON.parse(response_payload);
-          access_token = response_payload.access_token;
-          refresh_token = response_payload.refresh_token;
-          // Catch up on saved messages
-          message_buffer.map(postRequest);
-          node.log("Received new access token");
-          node.status({});
-        });
-      });
-      req.write(payload);
-      req.end();
-    };
-
-    var refreshAccessToken = function(){
-      node.status({fill:"blue",shape:"ring",text:"Refreshing Access Token"});
-      var payload = JSON.stringify({
-        "client_secret" : client_secret,
-        "client_id" : client_id,
-        "grant_type" : "refresh",
-        "refresh_token" : refresh_token
-      });
-
-      var headers = {
-        "Content-Type" : "application/json",
-        "Cache-Control" : "no-cache"
-      };
-
-      var opts = urllib.parse(api_endpoint);
-      opts.headers = headers;
-      opts.method = "POST";
-      //opts.auth = username+":"+(password||"");
-      opts.path += "/oauth/token";
-      var req = http.request(opts, function(res){
-        var statusCode = res.statusCode;
-        var headers = res.headers;
-        var response_payload = "";
-
-        res.on('data',function(chunk) {
-          response_payload += chunk;
-        });
-
-        res.on('end',function() {
-          response_payload = JSON.parse(response_payload);
-          access_token = response_payload.access_token;
-          //refresh_token = response_payload.refresh_token;
-          // Catch up on saved messages
-          if(statusCode === 401){
-            requestAccessToken();
+          if (statusCode === 401){
+            refresh_token = "";
+            getAccessToken();
           }else{
+            response_payload = JSON.parse(response_payload);
+            access_token = response_payload.access_token;
+            if (refresh_token !== ""){
+              refresh_token = response_payload.refresh_token;
+            }
             message_buffer.map(postRequest);
-            node.log("Refreshed access token");
+            node.log("Received new access token");
             node.status({});
           }
         });
@@ -159,21 +131,21 @@ module.exports = function(RED) {
 
         res.on('end',function() {
           switch(statusCode) {
-          case 200:
+            case 200:
             node.log("Request sent successfully");
             msg.payload = JSON.parse(response_payload);
             node.send(msg);
             break;
-          case 401:
+            case 401:
             node.status({fill:"yellow",shape:"ring",text:"Access token expired"});
             message_buffer.push(clone(msg));
             access_token = "";
-            refreshAccessToken();
+            getAccessToken();
             break;
-          case 400:
+            case 400:
             message_buffer.push(clone(msg));
             break;
-          default:
+            default:
             node.log("Something went wrong with the post request, status code: " + statusCode);
           }
           node.status({});
@@ -183,7 +155,7 @@ module.exports = function(RED) {
       req.end();
     };
 
-    requestAccessToken();
+    getAccessToken();
 
     this.on('input', function(msg) {
       postRequest(msg);
