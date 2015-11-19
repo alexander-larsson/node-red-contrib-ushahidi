@@ -5,17 +5,19 @@ module.exports = function(RED) {
   var urllib = require("url");
   var clone = require("clone");
 
-  function UshahidiAdmin(config) {
+  function UshahidiPost(config) {
     RED.nodes.createNode(this,config);
     var node = this;
     // User settings
-    var username = this.credentials.username;
-    var password = this.credentials.password;
     var client_id = this.credentials.client_id;
     var client_secret = this.credentials.client_secret;
     var api_endpoint = config.api_endpoint;
-    var method = config.method;
     var post_status = config.post_status;
+    if (this.credentials && this.credentials.username) {
+      node.log("user and pw set");
+      var username = this.credentials.username;
+      var password = this.credentials.password;
+    }
 
     //Tokens
     var access_token = "";
@@ -24,12 +26,17 @@ module.exports = function(RED) {
     //Message buffer for when waiting for tokens
     var message_buffer = [];
 
+    var gettingToken = false;
+
     // API endpoint must start with http:// or https:// so assume http:// if not set
     if (!((api_endpoint.indexOf("http://") === 0) || (api_endpoint.indexOf("https://") === 0))) {
       api_endpoint = "http://"+api_endpoint;
     }
 
+    var protocol = (/^https/.test(api_endpoint)) ? https : http;
+
     var getAccessToken = function(){
+      gettingToken = true;
       node.status({fill:"blue",shape:"ring",text: (refresh_token === "")? "Requesting" : "Refreshing" + " Access Token"});
       var payload;
       if (refresh_token === ""){
@@ -62,7 +69,7 @@ module.exports = function(RED) {
         opts.auth = username+":"+(password||"");
       }
       opts.path += "/oauth/token";
-      var req = http.request(opts, function(res){
+      var req = protocol.request(opts, function(res){
         var statusCode = res.statusCode;
         var headers = res.headers;
         var response_payload = "";
@@ -86,15 +93,23 @@ module.exports = function(RED) {
             node.log("Received new access token");
             node.status({});
           }
+          gettingToken = false;
         });
       });
+
+      req.on('error',function(err) {
+        node.error(err.toString() + " Error getting token, check your connection and try again");
+        gettingToken = false;
+        node.status({fill:"red",shape:"ring",text: "Error getting token, check your connection and try again"});
+      });
+
       req.write(payload);
       req.end();
     };
 
     var postRequest = function(msg) {
       node.status({fill:"blue",shape:"ring",text:"Posting to Ushahidi"});
-      var payload = JSON.stringify({
+      var payload = {
         "title": msg.title,
         "content": msg.payload,
         "locale": "en_US",
@@ -102,12 +117,20 @@ module.exports = function(RED) {
         "values": {
           "location_default": [msg.loc]
         },
-        "completed_stages": post_status==="published"?[1]:[],
+        //"completed_stages": post_status==="published"?[1]:[],
         "allowed_privileges": ["read","create","search"],
-        "form": {"id": (msg.form_id || 1)},
-        "author_realname": msg.author,
-        "author_email": msg.email
-      });
+        "form": {"id": (msg.form_id || 1)}
+        //"author_realname": msg.author,
+        //"author_email": msg.email
+      };
+      if (post_status === "published"){
+        payload.completed_stages = [1];
+        payload.author_realname = msg.author;
+        payload.author_email = msg.email;
+      } else {
+        payload.completed_stages = [];
+      }
+      payload = JSON.stringify(payload);
 
       var headers = {
         "Content-Type" : "application/json",
@@ -121,7 +144,7 @@ module.exports = function(RED) {
       opts.method = "POST";
       //opts.auth = username+":"+(password||"");
       opts.path += "/api/v3/posts";
-      var req = http.request(opts, function(res){
+      var req = protocol.request(opts, function(res){
         var statusCode = res.statusCode;
         var headers = res.headers;
         var response_payload = "";
@@ -145,13 +168,23 @@ module.exports = function(RED) {
             break;
             case 400:
             message_buffer.push(clone(msg));
+            console.log(gettingToken);
+            if (!gettingToken){
+              console.log("getting token");
+              getAccessToken();
+            }
             break;
             default:
-            node.log("Something went wrong with the post request, status code: " + statusCode);
+            node.error("Something went wrong with the post request, status code: " + statusCode);
           }
           node.status({});
         });
       });
+      req.on('error',function(err) {
+        node.error(err.toString() + " | Failed to send msg: " + JSON.stringify(msg));
+        node.status({fill:"red",shape:"ring",text: "Posting error, check your connection and try again"});
+      });
+
       req.write(payload);
       req.end();
     };
@@ -159,20 +192,10 @@ module.exports = function(RED) {
     getAccessToken();
 
     this.on('input', function(msg) {
-      // switch (method) {
-      //   case 'post':
-      //
-      //   break;
-      //   case 'get':
-      //   break;
-      //   default:
-      //   node.log("You broke the method");
-      //
-      // }
       postRequest(msg);
     });
   }
-  RED.nodes.registerType("ushahidi-admin",UshahidiAdmin, {
+  RED.nodes.registerType("ushahidi-post",UshahidiPost, {
     credentials: {
       client_secret: {type: "text", required: true},
       username: {type: "text", required: true},

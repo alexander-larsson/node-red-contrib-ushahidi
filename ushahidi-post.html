@@ -1,12 +1,11 @@
 <script type="text/javascript">
-    RED.nodes.registerType('ushahidi-admin',{
+    RED.nodes.registerType('ushahidi-post',{
         category: 'Ushahidi',
         color: '#ffc334',
         defaults: {
             name: {value:""},
             api_endpoint: {value:"", required: true},
-            method: {value:"get", required: true},
-            post_status: {value:"published", required: true}
+            post_status: {value:"draft", required: true}
         },
         credentials: {
           client_secret: {type: "text", required: true},
@@ -17,32 +16,23 @@
         inputs:1,
         outputs:1,
         icon: "ushahidi_logo.png",
-        paletteLabel: "Ushahidi Admin",
+        paletteLabel: "Ushahidi Post",
         label: function() {
-            return this.name || "Ushahidi Admin";
+            return this.name || "Ushahidi Post";
         }
     });
 </script>
 
-<script type="text/x-red" data-template-name="ushahidi-admin">
+<script type="text/x-red" data-template-name="ushahidi-post">
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-method"><i class="fa fa-tasks"></i> Method</label>
-        <select type="text" id="node-input-method" style="width:72%;">
-          <option value="get">GET</option>
-          <option value="post">POST</option>
-          <option value="put">PUT</option>
-          <option value="delete">DELETE</option>
-        </select>
-    </div>
-    <div class="form-row">
         <label for="node-input-post_status"><i class="fa fa-print"></i> Status</label>
         <select type="text" id="node-input-post_status" style="width:72%;">
           <option value="draft">Draft</option>
-          <option value="published">Published</option>
+          <option value="published">Published (Requires admin)</option>
         </select>
     </div>
     <div class="form-row">
@@ -57,17 +47,22 @@
         <label for="node-input-client_secret"><i class="fa fa-user-secret"></i> Client secret</label>
         <input type="text" id="node-input-client_secret" placeholder="Client secret">
     </div>
-    <div class="form-row credentials">
+    <div class="form-row">
+      <label>&nbsp;</label>
+      <input type="checkbox" id="node-input-use_login" style="display: inline-block; width: auto; vertical-align: top;">
+      <label for="node-input-use_login" style="width: 70%;"> Login as user</label>
+    </div>
+    <div class="form-row credentials node-input-use_login-row">
         <label for="node-input-username"><i class="fa fa-user"></i> Username</label>
         <input type="text" id="node-input-username" placeholder="Username">
     </div>
-    <div class="form-row credentials">
+    <div class="form-row credentials node-input-use_login-row">
         <label for="node-input-password"><i class="fa fa-key"></i> Password</label>
         <input type="password" id="node-input-password" placeholder="Password">
     </div>
 </script>
 
-<script type="text/x-red" data-help-name="ushahidi-admin">
+<script type="text/x-red" data-help-name="ushahidi-post">
     <p>Creates a ushahidi post with the following options:</p>
     <ul>
        <li><code>msg.title</code>, will be the title of the post</li>
