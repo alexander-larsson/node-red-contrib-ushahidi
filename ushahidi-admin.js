@@ -82,6 +82,7 @@ module.exports = function(RED) {
               refresh_token = response_payload.refresh_token;
             }
             message_buffer.map(postRequest);
+            message_buffer = []; // Clear the buffer
             node.log("Received new access token");
             node.status({});
           }
@@ -158,6 +159,16 @@ module.exports = function(RED) {
     getAccessToken();
 
     this.on('input', function(msg) {
+      // switch (method) {
+      //   case 'post':
+      //
+      //   break;
+      //   case 'get':
+      //   break;
+      //   default:
+      //   node.log("You broke the method");
+      //
+      // }
       postRequest(msg);
     });
   }
