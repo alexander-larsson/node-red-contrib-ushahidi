@@ -89,13 +89,17 @@ module.exports = function(RED) {
         });
 
         res.on('end',function() {
+          if (statusCode === 400){
+            node.error("Invalid user credentials");
+            return;
+          }
           if (statusCode === 401){
             refresh_token = "";
             getAccessToken();
           }else{
             response_payload = JSON.parse(response_payload);
             access_token = response_payload.access_token;
-            if (refresh_token !== ""){
+            if (response_payload.refresh_token){
               refresh_token = response_payload.refresh_token;
             }
             message_buffer.map(postRequest);
@@ -170,9 +174,7 @@ module.exports = function(RED) {
             break;
             case 400:
             message_buffer.push(clone(msg));
-            console.log(gettingToken);
             if (!gettingToken){
-              console.log("getting token");
               getAccessToken();
             }
             break;
