@@ -39,23 +39,34 @@ module.exports = function(RED) {
       gettingToken = true;
       node.status({fill:"blue",shape:"ring",text: (refresh_token === "")? "Requesting" : "Refreshing" + " Access Token"});
       var payload;
-      if (refresh_token === ""){
+
+      if(username){
+        if (refresh_token === ""){
+          payload = JSON.stringify({
+            "client_secret" : client_secret,
+            "client_id" : client_id,
+            "grant_type" : "password",
+            "username" : username,
+            "password" : password,
+            "scope" : "posts media forms api tags savedsearches sets users stats layers config messages notifications contacts"
+          });
+        }else{
+          payload = JSON.stringify({
+            "client_secret" : client_secret,
+            "client_id" : client_id,
+            "grant_type" : "refresh",
+            "refresh_token" : refresh_token
+          });
+        }
+      } else {
         payload = JSON.stringify({
           "client_secret" : client_secret,
           "client_id" : client_id,
-          "grant_type" : "password",
-          "username" : username,
-          "password" : password,
+          "grant_type" : "client_credentials",
           "scope" : "posts media forms api tags savedsearches sets users stats layers config messages notifications contacts"
         });
-      }else{
-        payload = JSON.stringify({
-          "client_secret" : client_secret,
-          "client_id" : client_id,
-          "grant_type" : "refresh",
-          "refresh_token" : refresh_token
-        });
       }
+
 
       var headers = {
         "Content-Type" : "application/json",
@@ -156,15 +167,11 @@ module.exports = function(RED) {
         res.on('end',function() {
           switch(statusCode) {
             case 200:
-            node.log("Request sent successfully");
             msg.payload = JSON.parse(response_payload);
+            /* falls through */
+            case 204:
+            node.log("Request sent successfully");
             node.send(msg);
-            break;
-            case 401:
-            node.status({fill:"yellow",shape:"ring",text:"Access token expired"});
-            message_buffer.push(clone(msg));
-            access_token = "";
-            getAccessToken();
             break;
             case 400:
             message_buffer.push(clone(msg));
@@ -173,6 +180,15 @@ module.exports = function(RED) {
               console.log("getting token");
               getAccessToken();
             }
+            break;
+            case 401:
+            node.status({fill:"yellow",shape:"ring",text:"Access token expired"});
+            message_buffer.push(clone(msg));
+            access_token = "";
+            getAccessToken();
+            break;
+            case 403:
+            node.error("Must be logged in as admin to post directly as published");
             break;
             default:
             node.error("Something went wrong with the post request, status code: " + statusCode);
