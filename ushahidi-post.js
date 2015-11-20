@@ -14,7 +14,6 @@ module.exports = function(RED) {
     var api_endpoint = config.api_endpoint;
     var post_status = config.post_status;
     if (this.credentials && this.credentials.username) {
-      node.log("user and pw set");
       var username = this.credentials.username;
       var password = this.credentials.password;
     }
@@ -35,13 +34,13 @@ module.exports = function(RED) {
 
     var protocol = (/^https/.test(api_endpoint)) ? https : http;
 
-    var getAccessToken = function(){
+    var getAccessToken = function() {
       gettingToken = true;
       node.status({fill:"blue",shape:"ring",text: (refresh_token === "")? "Requesting" : "Refreshing" + " Access Token"});
       var payload;
 
       if(username){
-        if (refresh_token === ""){
+        if (refresh_token === "") {
           payload = JSON.stringify({
             "client_secret" : client_secret,
             "client_id" : client_id,
@@ -50,7 +49,7 @@ module.exports = function(RED) {
             "password" : password,
             "scope" : "posts media forms api tags savedsearches sets users stats layers config messages notifications contacts"
           });
-        }else{
+        } else {
           payload = JSON.stringify({
             "client_secret" : client_secret,
             "client_id" : client_id,
@@ -128,18 +127,17 @@ module.exports = function(RED) {
         "values": {
           "location_default": [msg.loc]
         },
-        //"completed_stages": post_status==="published"?[1]:[],
         "allowed_privileges": ["read","create","search"],
-        "form": {"id": (msg.form_id || 1)}
-        //"author_realname": msg.author,
-        //"author_email": msg.email
+        "form": {"id": (msg.formId || 1)}
       };
-      if (post_status === "published"){
-        payload.completed_stages = [1];
-        payload.author_realname = msg.author;
-        payload.author_email = msg.email;
-      } else {
-        payload.completed_stages = [];
+      payload.completed_stages = (post_status === "published")? [1] : [];
+      if (!(refresh_token === "" && username)){
+        if(msg.author){
+          payload.author_realname = msg.author;
+        }
+        if(msg.email){
+          payload.author_email = msg.email;
+        }
       }
       payload = JSON.stringify(payload);
 
@@ -148,12 +146,9 @@ module.exports = function(RED) {
         "Cache-Control" : "no-cache",
         "Authorization" : "Bearer " + access_token
       };
-      // Send this baby after lunch
-      // Only POST works atm
       var opts = urllib.parse(api_endpoint);
       opts.headers = headers;
       opts.method = "POST";
-      //opts.auth = username+":"+(password||"");
       opts.path += "/api/v3/posts";
       var req = protocol.request(opts, function(res){
         var statusCode = res.statusCode;
@@ -165,12 +160,12 @@ module.exports = function(RED) {
         });
 
         res.on('end',function() {
+          msg.status_code = statusCode;
           switch(statusCode) {
             case 200:
-            msg.payload = JSON.parse(response_payload);
-            /* falls through */
             case 204:
             node.log("Request sent successfully");
+            msg.payload = (statusCode === 200)? JSON.parse(response_payload) : "{}";
             node.send(msg);
             break;
             case 400:
@@ -207,9 +202,7 @@ module.exports = function(RED) {
 
     getAccessToken();
 
-    this.on('input', function(msg) {
-      postRequest(msg);
-    });
+    this.on('input', postRequest);
   }
   RED.nodes.registerType("ushahidi-post",UshahidiPost, {
     credentials: {

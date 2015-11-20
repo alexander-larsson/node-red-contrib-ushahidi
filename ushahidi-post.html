@@ -19,6 +19,24 @@
         paletteLabel: "Ushahidi Post",
         label: function() {
             return this.name || "Ushahidi Post";
+        },
+        oneditprepare: function() {
+          if (this.credentials.username || this.credentials.has_password) {
+                $('#node-input-use_login').prop('checked', true);
+                $(".node-input-use_login-row").show();
+            } else {
+                $('#node-input-use_login').prop('checked', false);
+                $(".node-input-use_login-row").hide();
+            }
+            $("#node-input-use_login").change(function() {
+                if ($(this).is(":checked")) {
+                    $(".node-input-use_login-row").show();
+                } else {
+                    $(".node-input-use_login-row").hide();
+                    $('#node-input-username').val('');
+                    $('#node-input-password').val('');
+                }
+            });
         }
     });
 </script>
@@ -66,13 +84,19 @@
     <p>Creates a ushahidi post with the following options:</p>
     <ul>
        <li><code>msg.title</code>, will be the title of the post</li>
-       <li><code>msg.author</code>, will be the author of the post</li>
-       <li><code>msg.email</code>, will be the authors email</li>
        <li><code>msg.payload</code>, will be the description of the post</li>
        <li><code>msg.loc</code>, is a JavaScript object that includes the location of the post.
        The latitude should be set in a property <code>lat</code> and the longitude in <code>lon</code>.
        E.g: {lat: 13, lon: 37}</li>
-       <li><code>msg.form_id</code>, will be the id of the form on the Ushahidi deployment. Defaults to 1.</li>
+       <li><code>msg.author</code>, (optional) will be the name of the author of the post. Cannot be used when logged on to a non-admin account.</li>
+       <li><code>msg.email</code>, (optional) will be the author's email. Cannot be used when logged on to a non-admin account.</li>
+       <li><code>msg.formId</code>, will be the id of the form on the Ushahidi deployment. Defaults to 1.</li>
    </ul>
    <p>The response from the server is put into <code>msg.payload</code></p>
+   <br><br>
+   <p>The node will give you the following output</p>
+   <ul>
+      <li><code>msg.payload</code> is the payload you get back from the server</li>
+      <li><code>msg.statusCode</code> is the HTTP status code returned by the server</li>
+  </ul>
 </script>
