@@ -25,5 +25,10 @@
   "dependencies": {
     "clone": "^1.0.2",
     "follow-redirects": "0.0.7"
-  }
+  },
+    "node-red"     : {
+        "nodes": {
+            "ushahidi-post": "ushahidi-post.js"
+        }
+    }
 }
