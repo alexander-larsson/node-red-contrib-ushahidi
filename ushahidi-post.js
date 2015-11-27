@@ -164,7 +164,7 @@ module.exports = function(RED) {
         });
 
         res.on('end',function() {
-          msg.status_code = statusCode;
+          msg.statusCode = statusCode;
           switch(statusCode) {
             case 200:
             case 204:
