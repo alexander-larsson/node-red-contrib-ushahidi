@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-ushahidi",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Super Awesome Node for Awesome humanity hackers and stuff (because they use Ushahidi)",
   "main": "ushahidi-post.js",
   "scripts": {
