@@ -97,7 +97,12 @@ module.exports = function(RED) {
             refresh_token = "";
             getAccessToken();
           }else{
-            response_payload = JSON.parse(response_payload);
+            try{
+              response_payload = JSON.parse(response_payload);
+            } catch(e) {
+              node.error("Response could not be parsed as JSON: " + response_payload + "\nError message: " + e);
+              return;
+            }
             access_token = response_payload.access_token;
             if (response_payload.refresh_token){
               refresh_token = response_payload.refresh_token;
@@ -169,7 +174,12 @@ module.exports = function(RED) {
             case 200:
             case 204:
             node.log("Request sent successfully");
-            msg.payload = (statusCode === 200)? JSON.parse(response_payload) : "{}";
+            try {
+              msg.payload = (statusCode === 200)? JSON.parse(response_payload) : "{}";
+            } catch (e) {
+              node.error("Response could not be parsed as JSON: " + response_payload + "\nError message: " + e);
+              return;
+            }
             node.send(msg);
             break;
             case 400:
