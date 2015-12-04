@@ -11,7 +11,7 @@ nodes added in the future (getting posts, updating data, deleting posts).
 Use npm to install locally:
 > npm install node-red-contrib-ushahidi
 
-Or if your running a global Node-Red installation:
+Or if you're running a global Node-Red installation:
 > npm install -g node-red-contrib-ushahidi
 
 ## Usage
