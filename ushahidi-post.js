@@ -192,6 +192,7 @@ module.exports = function(RED) {
             node.status({fill:"yellow",shape:"ring",text:"Access token expired"});
             message_buffer.push(clone(msg));
             access_token = "";
+            refresh_token = "";
             getAccessToken();
             break;
             case 403:
