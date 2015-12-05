@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-ushahidi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A node for Node-Red that can be used to POST things to an Ushahidi deployment",
   "main": "ushahidi-post.js",
   "scripts": {
